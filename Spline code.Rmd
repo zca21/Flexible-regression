@@ -157,6 +157,34 @@ with(marine.data,
 ```{r}
 #Question 6
 
-#leaving for when this has been covered
+#Creating function to calculate overall cross validation error of dataset using 14 folds defined by group variable with input s.degree used to choose the splines degree 
+cv.error.func <- function(s.degree){
+cv.fold.error <- NULL
+for (i in 1:14){
+  #removing ith partition (group i) from data
+  depth <- marine.data$depth[marine.data$group!=i]
+  diameter <- marine.data$diameter[marine.data$group!=i]
+  
+  #fitting spline without ith partition
+  b.spline.basis <- bs(x=depth,degree=s.degree,knots = c(15, 25, 35, 45, 55),intercept=T)
+  b.spline.fitted <- lm(diameter ~ -1 + b.spline.basis)
+  
+  #Calculating CV error for the ith fold
+  b.spline.diff <- diameter - fitted(b.spline.fitted)
+  cv.fold.error[i] <- sum(b.spline.diff^2)
+}
+#calculating overall cv error of model
+error <- sum(cv.fold.error)*1/14
+return(error)
+}
+
+#calculating overall CV error for b-splines of degree 1-5
+cv.error.func(1)
+cv.error.func(2)
+cv.error.func(3)
+cv.error.func(4)
+cv.error.func(5)
+
+#As the degree 4 (order 5) spline has the lowest overall cross validation error of 165.896 this is the polynomial degree that should be selected
 ```
 
