@@ -44,7 +44,7 @@ with(marine.data,
 
 #2 poly fails to capture the relationship 
 #10 poly does a fairly good job at capturing trend - has squiggle at the end
-#20 poly has artefacts caused by noise being captured rather than the trend (at start and end see the squiggles) - runges phenomenem?
+#20 poly has artefacts caused by noise being captured rather than the trend (at start and end see the squiggles) [overfitting] - runges phenomenem?
 ```
 
 ```{r}
@@ -186,5 +186,37 @@ cv.error.func(4)
 cv.error.func(5)
 
 #As the degree 4 (order 5) spline has the lowest overall cross validation error of 165.896 this is the polynomial degree that should be selected
+```
+
+
+```{r}
+cv.error.func <- function(s.degree){
+cv.fold.error <- NULL
+for (i in 1:14){
+  #removing ith partition (group i) from data
+  testset <- marine.data[marine.data$group==i,]
+  trainset <- marine.data[marine.data$group!=i,]
+  
+  #fitting spline without ith partition
+  b.spline.basis <- bs(x=trainset$depth,degree=s.degree,knots = c(15, 25, 35, 45, 55),intercept=T)
+  b.spline.fitted <- lm(trainset$diameter ~ -1 + b.spline.basis)
+  
+  #predicting value using model
+  predict.data <- data.frame(bs(x=testset$depth,degree=s.degree,knots = c(15, 25, 35, 45, 55),intercept=T))
+  bs.fit.pred <- as.matrix(predict.data)%*%as.matrix(b.spline.fitted$coefficients)
+  
+  #calculating cv error for ith fold
+  cv.fold.error[i] <- sum((testset$diameter-as.numeric(bs.fit.pred))^2)
+}
+#calculating overall cv error of model
+error <- sum(cv.fold.error)/nrow(marine.data)
+return(error)
+}
+
+cv.error.func(1)
+cv.error.func(2)
+cv.error.func(3)
+cv.error.func(4)
+cv.error.func(5)
 ```
 
