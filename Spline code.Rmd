@@ -218,5 +218,23 @@ cv.error.func(2)
 cv.error.func(3)
 cv.error.func(4)
 cv.error.func(5)
+
+#Using a spline with 4 degrees gives the lowest overall CV error, thus this is the best model out of splines using degrees 1,2,3,4 and 5. (dont know if higher order may have a better CV error)
 ```
+
+```{r}
+#Testing Q6 using 
+bs.basis <- bs(marine.data$depth,degree=3,knots = c(10, 20, 30, 40, 60),intercept=T)
+
+#Creating b-spline regression
+bs.model <- lm(diameter ~ -1 + bs.basis, marine.data)
+
+#Using prediction method in Q6
+predict.data <- data.frame(bs(marine.data$depth,degree=3,knots = c(10, 20, 30, 40, 60),intercept=T))
+bs.fit.pred <- as.matrix(predict.data)%*%as.matrix(bs.model$coefficients)
+
+#comparing against predict function
+sum(predict(bs.model)-bs.fit.pred)
+```
+
 
