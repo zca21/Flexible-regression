@@ -11,10 +11,18 @@ marine.data <- read.csv("marine.csv")
 
 ```{r}
 #Q1
+
+#relationship is non-linear...
+png(file="q1_scatterplot.png",
+    width=720,
+    height=480)
 with(marine.data,
   plot(x=depth,y=diameter,
-       pch = 16, col = "#00000077"))
-#relationship is non-linear...
+       pch = 16, col = "#00000077",
+       #main="Scatterplot of depth vs diameter of marine fungi",
+       ylab="Diameter of spores (mm)",
+       xlab="Depth (meteres below sea level)"))
+dev.off()
 ```
 
 ```{r}
@@ -24,27 +32,41 @@ lm10 <- lm(diameter~poly(depth,10),marine.data)
 lm20 <- lm(diameter~poly(depth,20),marine.data)
 
 #plotting
+png(file="q2_poly2.png",
+    width=720,
+    height=480)
 with(marine.data,
   {plot(x=depth,y=diameter,
-        pch = 16, col = "#00000077")
+        pch = 16, col = "#00000077",
+        ylab="Diameter of spores (mm)",
+        xlab="Depth (meteres below sea level)")
   lines(x=sort(depth),y = fitted(lm2)[order(depth)],
         col = "red", lwd = 3.5)})
+dev.off()
 
+png(file="q2_poly10.png",
+    width=720,
+    height=480)
 with(marine.data,
   {plot(x=depth,y=diameter,
-        pch = 16, col = "#00000077")
+        pch = 16, col = "#00000077",
+        ylab="Diameter of spores (mm)",
+        xlab="Depth (meteres below sea level)")
   lines(x=sort(depth),y = fitted(lm10)[order(depth)],
-        col = "blue", lwd = 3.5)})
+        col = "red", lwd = 3.5)})
+dev.off()
 
+png(file="q2_poly20.png",
+    width=720,
+    height=480)
 with(marine.data,
   {plot(x=depth,y=diameter,
-        pch = 16, col = "#00000077")
+        pch = 16, col = "#00000077",
+        ylab="Diameter of spores (mm)",
+        xlab="Depth (meteres below sea level)")
   lines(x=sort(depth),y = fitted(lm20)[order(depth)],
-        col = "green", lwd = 3.5)})
-
-#2 poly fails to capture the relationship 
-#10 poly does a fairly good job at capturing trend - has squiggle at the end
-#20 poly has artefacts caused by noise being captured rather than the trend (at start and end see the squiggles) [overfitting] - runges phenomenem?
+        col = "red", lwd = 3.5)})
+dev.off()
 ```
 
 ```{r}
@@ -54,7 +76,11 @@ bs.basis <- bs(marine.data$depth,degree=3,knots = c(10, 20, 30, 40, 60),intercep
 
 #b
 bs.model <- lm(diameter ~ -1 + bs.basis, marine.data)
-summary(bs.model)
+data.frame(transform(summary(bs.model)$coefficients))%>%
+  kableExtra::kable(digits=3)%>%
+  kableExtra::kable_classic_2()
+
+t <- summary(bs.model)$coefficients
 
 #c
 with(marine.data,
@@ -68,15 +94,21 @@ predict.df <- data.frame(predict(bs.model, interval = 'confidence'))
 #confidence interval is 2nd and 3rd value
 
 #e
+png(file="q3_bs.png",
+    width=720,
+    height=480)
 with(marine.data,
   {plot(x=depth,y=diameter,
-        pch = 16, col = "#00000077")
+        pch = 16, col = "#00000077",
+        ylab="Diameter of spores (mm)",
+        xlab="Depth (meteres below sea level)")
    lines(x=sort(depth),y = fitted(bs.model)[order(depth)],
         col = "red", lwd = 2)
    lines(x=sort(depth),y = predict.df$lwr[order(depth)],
         col = "blue", lwd = 2, lty = "dashed")
    lines(x=sort(depth),y = predict.df$upr[order(depth)],
         col = "blue", lwd = 2, lty = "dashed")})
+dev.off()
 
 ```
 
@@ -104,18 +136,21 @@ predict.ns.df <- data.frame(predict(ns.model, interval = 'confidence'))
 #confidence interval is 2nd and 3rd value
 
 #f
+png(file="q4_ns.png",
+    width=720,
+    height=480)
 with(marine.data,
   {plot(x=depth,y=diameter,
-        pch = 16, col = "#00000077")
+        pch = 16, col = "#00000077",
+        ylab="Diameter of spores (mm)",
+        xlab="Depth (meteres below sea level)")
    lines(x=sort(depth),y = fitted(ns.model)[order(depth)],
         col = "red", lwd = 2)
    lines(x=sort(depth),y = predict.ns.df$lwr[order(depth)],
         col = "blue", lwd = 2, lty = "dashed")
    lines(x=sort(depth),y = predict.ns.df$upr[order(depth)],
         col = "blue", lwd = 2, lty = "dashed")})
-
-#g
-#trend better at boundary, CI also smaller at boundary
+dev.off()
 ```
 
 ```{r}
@@ -123,71 +158,53 @@ with(marine.data,
 
 #a
 ss_12.5 <- smooth.spline(x=marine.data$depth,y=marine.data$diameter,df=12.5)
-ss_12.5
+print(ss_12.5)
 
 #b
 ss_17.5 <- smooth.spline(x=marine.data$depth,y=marine.data$diameter,df=17.5)
-ss_17.5
+print(ss_17.5)
 
 #c
 ss_25 <- smooth.spline(x=marine.data$depth,y=marine.data$diameter,df=25)
-ss_25
+print(ss_25)
 
 #d
+png(file="q5_ss12.png",
+    width=720,
+    height=480)
 with(marine.data,
   {plot(x=depth,y=diameter,
-        pch = 16, col = "#00000077")
+        pch = 16, col = "#00000077",
+        ylab="Diameter of spores (mm)",
+        xlab="Depth (meteres below sea level)")
   lines(x=sort(depth),y = fitted(ss_12.5)[order(depth)],
         col = "red", lwd = 3.5)})
+dev.off()
 
+png(file="q5_ss17.png",
+    width=720,
+    height=480)
 with(marine.data,
   {plot(x=depth,y=diameter,
-        pch = 16, col = "#00000077")
+        pch = 16, col = "#00000077",
+        ylab="Diameter of spores (mm)",
+        xlab="Depth (meteres below sea level)")
   lines(x=sort(depth),y = fitted(ss_17.5)[order(depth)],
         col = "red", lwd = 3.5)})
+dev.off()
 
+png(file="q5_ss25.png",
+    width=720,
+    height=480)
 with(marine.data,
   {plot(x=depth,y=diameter,
-        pch = 16, col = "#00000077")
+        pch = 16, col = "#00000077",
+        ylab="Diameter of spores (mm)",
+        xlab="Depth (meteres below sea level)")
   lines(x=sort(depth),y = fitted(ss_25)[order(depth)],
         col = "red", lwd = 3.5)})
-#over fitting seems to be happening on higher effective degree of freedom smoothing spines with noise being added to (seen by the pertubations)
+dev.off()
 ```
-
-```{r}
-#Question 6
-
-#Creating function to calculate overall cross validation error of dataset using 14 folds defined by group variable with input s.degree used to choose the splines degree 
-cv.error.func <- function(s.degree){
-cv.fold.error <- NULL
-for (i in 1:14){
-  #removing ith partition (group i) from data
-  depth <- marine.data$depth[marine.data$group!=i]
-  diameter <- marine.data$diameter[marine.data$group!=i]
-  
-  #fitting spline without ith partition
-  b.spline.basis <- bs(x=depth,degree=s.degree,knots = c(15, 25, 35, 45, 55),intercept=T)
-  b.spline.fitted <- lm(diameter ~ -1 + b.spline.basis)
-  
-  #Calculating CV error for the ith fold
-  b.spline.diff <- diameter - fitted(b.spline.fitted)
-  cv.fold.error[i] <- sum(b.spline.diff^2)
-}
-#calculating overall cv error of model
-error <- sum(cv.fold.error)*1/14
-return(error)
-}
-
-#calculating overall CV error for b-splines of degree 1-5
-cv.error.func(1)
-cv.error.func(2)
-cv.error.func(3)
-cv.error.func(4)
-cv.error.func(5)
-
-#As the degree 4 (order 5) spline has the lowest overall cross validation error of 165.896 this is the polynomial degree that should be selected
-```
-
 
 ```{r}
 cv.error.func <- function(s.degree){
@@ -212,14 +229,12 @@ for (i in 1:14){
 error <- sum(cv.fold.error)/nrow(marine.data)
 return(error)
 }
-
-cv.error.func(1)
-cv.error.func(2)
-cv.error.func(3)
-cv.error.func(4)
-cv.error.func(5)
-
-#Using a spline with 4 degrees gives the lowest overall CV error, thus this is the best model out of splines using degrees 1,2,3,4 and 5. (dont know if higher order may have a better CV error)
+#calculating error for each polynomial degree
+round(cv.error.func(1),3)
+round(cv.error.func(2),3)
+round(cv.error.func(3),3)
+round(cv.error.func(4),3)
+round(cv.error.func(5),3)
 ```
 
 ```{r}
