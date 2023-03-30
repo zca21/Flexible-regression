@@ -10,9 +10,7 @@ marine.data <- read.csv("marine.csv")
 ```
 
 ```{r}
-#Q1
-
-#relationship is non-linear...
+###########Q1#################
 png(file="q1_scatterplot.png",
     width=720,
     height=480)
@@ -26,7 +24,7 @@ dev.off()
 ```
 
 ```{r}
-#Q2 - fitting polynomial regressions
+#################Q2####################
 lm2 <- lm(diameter~poly(depth,2),marine.data)
 lm10 <- lm(diameter~poly(depth,10),marine.data)
 lm20 <- lm(diameter~poly(depth,20),marine.data)
@@ -70,28 +68,21 @@ dev.off()
 ```
 
 ```{r}
-#Question 3
+###############Question 3#################
 #a
 bs.basis <- bs(marine.data$depth,degree=3,knots = c(10, 20, 30, 40, 60),intercept=T)
-
 #b
 bs.model <- lm(diameter ~ -1 + bs.basis, marine.data)
-data.frame(transform(summary(bs.model)$coefficients))%>%
-  kableExtra::kable(digits=3)%>%
-  kableExtra::kable_classic_2()
-
-t <- summary(bs.model)$coefficients
-
+print(summary(bs.model))
 #c
 with(marine.data,
   {plot(x=depth,y=diameter,
         pch = 16, col = "#00000077")
   lines(x=sort(depth),y = fitted(bs.model)[order(depth)],
         col = "red", lwd = 3.5)})
-
 #d
 predict.df <- data.frame(predict(bs.model, interval = 'confidence'))
-#confidence interval is 2nd and 3rd value
+CI <- predict.df[,2:3]
 
 #e
 png(file="q3_bs.png",
@@ -109,32 +100,24 @@ with(marine.data,
    lines(x=sort(depth),y = predict.df$upr[order(depth)],
         col = "blue", lwd = 2, lty = "dashed")})
 dev.off()
-
 ```
 
 ```{r}
-#Question 4
-
-#As natural splines conditions free up 4 degrees of freedom means can have 4 more knots thus 2 boundary knots and 7 internal knots to maintain the same degree of freedom as the b-spline which had 5 knots
-
+#####################Question 4######################
 #b
 ns.basis <- ns(marine.data$depth,knots = c(12.5,20,27.5,35,42.5,50,57.5),intercept=T,Boundary.knots = c(5,65))
 
 #c
 ns.model <- lm(diameter~-1+ns.basis,marine.data)
 summary(ns.model)
-
 #d
 with(marine.data,
   {plot(x=depth,y=diameter,
         pch = 16, col = "#00000077")
   lines(x=sort(depth),y = fitted(ns.model)[order(depth)],
         col = "red", lwd = 3.5)})
-
 #e
 predict.ns.df <- data.frame(predict(ns.model, interval = 'confidence'))
-#confidence interval is 2nd and 3rd value
-
 #f
 png(file="q4_ns.png",
     width=720,
@@ -154,20 +137,16 @@ dev.off()
 ```
 
 ```{r}
-#Question 5
-
+#####################Question 5##################
 #a
 ss_12.5 <- smooth.spline(x=marine.data$depth,y=marine.data$diameter,df=12.5)
 print(ss_12.5)
-
 #b
 ss_17.5 <- smooth.spline(x=marine.data$depth,y=marine.data$diameter,df=17.5)
 print(ss_17.5)
-
 #c
 ss_25 <- smooth.spline(x=marine.data$depth,y=marine.data$diameter,df=25)
 print(ss_25)
-
 #d
 png(file="q5_ss12.png",
     width=720,
@@ -207,6 +186,7 @@ dev.off()
 ```
 
 ```{r}
+################Question 6###########################
 cv.error.func <- function(s.degree){
 cv.fold.error <- NULL
 for (i in 1:14){
