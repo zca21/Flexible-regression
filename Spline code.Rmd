@@ -19,7 +19,7 @@ with(marine.data,
        pch = 16, col = "#00000077",
        #main="Scatterplot of depth vs diameter of marine fungi",
        ylab="Diameter of spores (mm)",
-       xlab="Depth (meteres below sea level)"))
+       xlab="Depth (meters below sea level)"))
 dev.off()
 ```
 
@@ -37,7 +37,7 @@ with(marine.data,
   {plot(x=depth,y=diameter,
         pch = 16, col = "#00000077",
         ylab="Diameter of spores (mm)",
-        xlab="Depth (meteres below sea level)")
+        xlab="Depth (meters below sea level)")
   lines(x=sort(depth),y = fitted(lm2)[order(depth)],
         col = "red", lwd = 3.5)})
 dev.off()
@@ -49,7 +49,7 @@ with(marine.data,
   {plot(x=depth,y=diameter,
         pch = 16, col = "#00000077",
         ylab="Diameter of spores (mm)",
-        xlab="Depth (meteres below sea level)")
+        xlab="Depth (meters below sea level)")
   lines(x=sort(depth),y = fitted(lm10)[order(depth)],
         col = "red", lwd = 3.5)})
 dev.off()
@@ -61,7 +61,7 @@ with(marine.data,
   {plot(x=depth,y=diameter,
         pch = 16, col = "#00000077",
         ylab="Diameter of spores (mm)",
-        xlab="Depth (meteres below sea level)")
+        xlab="Depth (meters below sea level)")
   lines(x=sort(depth),y = fitted(lm20)[order(depth)],
         col = "red", lwd = 3.5)})
 dev.off()
@@ -92,7 +92,7 @@ with(marine.data,
   {plot(x=depth,y=diameter,
         pch = 16, col = "#00000077",
         ylab="Diameter of spores (mm)",
-        xlab="Depth (meteres below sea level)")
+        xlab="Depth (meters below sea level)")
    lines(x=sort(depth),y = fitted(bs.model)[order(depth)],
         col = "red", lwd = 2)
    lines(x=sort(depth),y = predict.df$lwr[order(depth)],
@@ -126,7 +126,7 @@ with(marine.data,
   {plot(x=depth,y=diameter,
         pch = 16, col = "#00000077",
         ylab="Diameter of spores (mm)",
-        xlab="Depth (meteres below sea level)")
+        xlab="Depth (meters below sea level)")
    lines(x=sort(depth),y = fitted(ns.model)[order(depth)],
         col = "red", lwd = 2)
    lines(x=sort(depth),y = predict.ns.df$lwr[order(depth)],
@@ -155,7 +155,7 @@ with(marine.data,
   {plot(x=depth,y=diameter,
         pch = 16, col = "#00000077",
         ylab="Diameter of spores (mm)",
-        xlab="Depth (meteres below sea level)")
+        xlab="Depth (meters below sea level)")
   lines(x=sort(depth),y = fitted(ss_12.5)[order(depth)],
         col = "red", lwd = 3.5)})
 dev.off()
@@ -167,7 +167,7 @@ with(marine.data,
   {plot(x=depth,y=diameter,
         pch = 16, col = "#00000077",
         ylab="Diameter of spores (mm)",
-        xlab="Depth (meteres below sea level)")
+        xlab="Depth (meters below sea level)")
   lines(x=sort(depth),y = fitted(ss_17.5)[order(depth)],
         col = "red", lwd = 3.5)})
 dev.off()
@@ -179,7 +179,7 @@ with(marine.data,
   {plot(x=depth,y=diameter,
         pch = 16, col = "#00000077",
         ylab="Diameter of spores (mm)",
-        xlab="Depth (meteres below sea level)")
+        xlab="Depth (meters below sea level)")
   lines(x=sort(depth),y = fitted(ss_25)[order(depth)],
         col = "red", lwd = 3.5)})
 dev.off()
