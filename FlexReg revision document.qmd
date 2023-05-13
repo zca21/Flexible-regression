@@ -1,0 +1,72 @@
+---
+title: "Untitled"
+format: html
+editor: visual
+---
+
+# Mixed Models
+
+## Linear mixed model
+
+$$
+Y = X\beta + A\alpha + \varepsilon
+$$
+
+We can perform a **LRT** to find if random effects are significant
+
+$$
+L_{ij} = \frac{1}{\sqrt{2\pi (\sigma^{2}+\sigma_\alpha^{2})}}exp\bigg(\frac{(y_{ij}-\mu)^{2}}{-2(\sigma^{2}+\sigma_\alpha^{2})}\bigg), \; \; \; \; logL = \sum_{i}\sum_{j}log(L_{ij}), \;\;\;\; 2log\lambda =2(log(L_{1})-log(L_{0}))
+$$
+
+With the critical value $\frac{1}{2}\chi_{(0)}^{2}+\frac{1}{2}\chi_{(1)}^{2}$ under $H_{0}: \sigma_{\alpha}^{2}=0$
+
+The **covariance structure** of a LMM with G the $cov(\alpha)$ and A the design matrix of the random effects
+
+$$
+V = AGA^{T}+R
+$$
+
+Fitting the model using **profile log-likelihood,** first assume $V$ constant and fit $\beta$ by maximising log-likelihood then sub $\hat{\beta}$ back into likelihood and maximise likelihood (now only a function of $V$).
+
+$$
+ -2LogL = constant + log|V|+(Y-X\beta)^{-1}V^{-1}(Y-X\beta), \; \; \; \; \hat{\beta}=(X^{T}V^{-1}X)^{-1}X^{T}V^{-1}Y
+$$
+This gives **biased** estimates of the covariance structure due to having to estimate the **mean structure** first. **REML** adds a correction term to adjust for this $+log(|X^{T}V^{-1}X|)$ giving unbiased estimates of the variance.
+
+## Covariance Pattern models
+
+Model the response in 2 parts, **fixed effects** (for model mean)and the **random error** (ignores random effects and models the covariance structure directly).
+
+$$
+Y=X\beta + \boldsymbol{\varepsilon}, \;\;\;\; \boldsymbol{y_{ij}} = X_{ij}\beta+\boldsymbol{\varepsilon_{ij}}
+$$
+
+Each person has there own matrix $X_{ij}$ for each of the $k$ observations that belong to them, thus each person has a covariance matrix \$R\_{ij}\$. We focus on $R_{00}$ to investigate the covariance structure.
+
+$$
+cov(\boldsymbol{\varepsilon_{ij}}) = R_{ij}, \;\;\;\; cov(\boldsymbol{\varepsilon})=R, \;\;\;\; V=ZRZ^{T} + R = R
+$$
+
+Covariance structures include: **independence** ($\sigma^{2}I$), **Toeplitz** ($\sigma^{2}$ on the diagonal and $\sigma_{1}$ on elements next to diagonal )**, Banded** (separate $\sigma_{i}^{2}$ on diagonal and different covariance for off diagonal)**, unstructured, Auto-regressive, Compound symmetric.**
+
+Can compare covariance structures using **log-likelihood** (if nested e.g. unstructured vs any other) with chi-squared the difference in df. More **parsimonious covariance** is desired for improved precision and power (if valid).
+
+## Random coefficient models
+
+Now have \$cov(\\boldsymbol{\\alpha})=\\phi \$ with phi storing variance of REs and their covariance, $G=\phi I$. Other big difference is that write model as,
+
+$$
+Y = Xb + Za + \varepsilon
+$$
+
+With $Z=diag(X_{i})$ and $V=ZGZ^{T} + R$
+
+## General linear mixed model
+
+Laplace approximations $\int_{\alpha}L(\alpha) d\alpha \approx L(\hat{\alpha})+\sqrt{2\pi/\hat{I(\hat{\alpha}})}$ with $-\frac{d^{2}}{d\alpha^{2}}=I(\alpha)$ are used to estimate FIGURE OUT POINT OF THIS
+
+The general likelihood of the GLMM is, (where product would also be applied inside integral for the j index)
+
+$$
+\prod_{i=1}^{n}\int_{\boldsymbol{\alpha}}f(\boldsymbol{y};\boldsymbol{\eta},\phi)\varphi(\boldsymbol{\alpha};\Sigma_{\alpha})d\boldsymbol{\alpha}
+$$
