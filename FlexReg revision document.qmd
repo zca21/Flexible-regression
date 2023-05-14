@@ -30,8 +30,7 @@ Fitting the model using **profile log-likelihood,** first assume $V$ constant an
 
 $$
  -2LogL = constant + log|V|+(Y-X\beta)^{-1}V^{-1}(Y-X\beta), \; \; \; \; \hat{\beta}=(X^{T}V^{-1}X)^{-1}X^{T}V^{-1}Y
-$$
-This gives **biased** estimates of the covariance structure due to having to estimate the **mean structure** first. **REML** adds a correction term to adjust for this $+log(|X^{T}V^{-1}X|)$ giving unbiased estimates of the variance.
+$$ This gives **biased** estimates of the covariance structure due to having to estimate the **mean structure** first. **REML** adds a correction term to adjust for this $+log(|X^{T}V^{-1}X|)$ giving unbiased estimates of the variance.
 
 ## Covariance Pattern models
 
@@ -111,6 +110,8 @@ $$
 
 -   Can add covariates to the model by replacing mean with linear model (can be homogeneous or hetrogenous)
 
+-   Can calculate the **marginal mean** for each class as $\hat{\mu_{k}}=\frac{1}{n}\sum_{i=1}^{n}\hat{Y_{ik}}$
+
 For non-normal kernels need to use **link function** instead of just subbing in mean and SD.
 
 $$
@@ -119,19 +120,25 @@ $$
 
 # Non-linear Regression
 
+-   **Polynomial regression** (easy to construct power series, sensitive to outliers, tails unpredictable)
+
+-   **Step function** (easy to set up, no clear optimal number and location of cut-off points)
+
+-   **Piecewise polynomials** (issue of sudden jumps between intervals)
+
 ## Splines
 
-#### Information:
+**Regression splines** ensures a continuous function between polynomials in different regions/intervals (cubic is lowest order spline that has continuous first and second derivatives of the function) while **avoiding using a very high degree global polynomial** (difficult to interpret and Runge's phenonemon). The **degrees of freedom** is M(K+1)-(M-1)K.
 
-Regression splines ensures a continuous function between polynomials in different regions (cubic is lowest order spline that has first and second derivatives of function are continuous) while **avoiding using very high degree global polynomial** (difficult to interpret). The **degrees of freedom** is M(K+1)-3K.
-
-**Truncated power series** with k knots,$\hat{Y}=f(X)=\sum_{k=0}^{K+M-1}\beta_{k}h_{k}(X)$
+**Truncated power series of order M** with k knots,$\hat{Y}=f(X)=\sum_{k=0}^{K+M-1}\beta_{k}h_{k}(X)$
 
 **B-spline** is used to deal with issues of colinearity and extremely large/small values from even moderate order M. The **B-spline basis** $f(X)=\sum_{j=1}^{K+M}\beta_{j}B_{j,M}(X)$
 
-**Natural spline** is used to correct issues at the boundaries (unpredictable behavior, **Runge's phenomenon**) by adding constraints to truncated power series of second and third derivatives equal to zero for $X<c_{1}$ and $X>c_{K}$ which corresponds to $\beta_{2}=\beta_{3}=\sum_{k=3}^{K+3}\beta_{k}=\sum_{k=3}^{K+3}c_{k}\beta_{k}=0$. we can instead represent the natural spline as $\sum_{k=1}^{K}\beta_{k}N_{k}(X)$. We end up with a variance-bias tradeoff with the variance lower
+**Natural spline** is used to correct issues at the boundaries (unpredictable behavior, **Runge's phenomenon**) by adding constraints to truncated power series of second and third derivatives equal to zero for $X<c_{1}$ and $X>c_{K}$ which corresponds to $\beta_{2}=\beta_{3}=\sum_{k=1}^{K}\beta_{k+3}=\sum_{k=1}^{K}c_{k}\beta_{k+3}=0$. we can instead represent the natural spline as $\sum_{k=1}^{K}\beta_{k}N_{k}(X)$. We end up with a variance-bias tradeoff with the variance lower.
 
-**Smoothing spline** is used to address issue of different cut-off points led to different approximations. It selects **maximum possible number of knots** but controls for overfitting by **regularisation** (restricts magnitude of coefficients). It is fitted by minimising the **penalized residual sum of squares,**
+We can also use **generalised linear regression** with splines by fitting spline to linear predictor $\eta$ thus, $g(E\{X\})=f(X)=\sum_{k=1}^{K}\beta_{k}N_{k}(X)$ (for natural spline in this case).
+
+**Smoothing spline** is used to address issue of different cut-off points led to different approximations. It selects **maximum possible number of knots** but controls for over-fitting by **regularisation** (restricts magnitude of coefficients). It is fitted by minimising the **penalized residual sum of squares,**
 
 $$
 f(;\lambda,f) = \sum_{i=1}^{n}\{y_{i}-f(x_{i})\}^{2}+\lambda\int [f^{''}(t)]^{2}dt
@@ -141,8 +148,132 @@ With the **effective degrees of freedom** determined by the smoother matrix $S_{
 
 Want to choose $\lambda$ that minimises EPE (as EPE is a function of MSE so takes into account bias-variance trade-off). Use **k-fold cross-validation** to estimate the EPE, also can use **LOOCV** and **GCV.**
 
-#### Code:
+#### Code
+
+Fitting a b-spline
+
+```{r}
+setwd("~/Desktop/Flexible Regression/CW/Flexible-regression")
+copper.df = read.csv(file = "copper.csv", header = T)
+bs.basis <- with(data=copper.df,  #creating basis
+                 splines::bs(temperature,df=10,degree=3,
+                                        knots=c(120,240,360,480,600,720),intercept = T))
+copper.bs <-lm(y~-1+bs.basis,data=copper.df) #creating regression spline
+summary(copper.bs) #summary output (can use AIC/BIC to compare models)
+```
+
+Fitting natural spline
+
+```{r}
+ns.basis <- with(data=copper.df, #df is 4 less than TPS spline with same no. of knots
+                 splines::ns(temperature,df=6, 
+                             knots = c(100,300,500,700),
+                             Boundary.knots = c(50,800),
+                             intercept = T))
+copper.ns <- lm(y~ -1 +ns.basis, data=copper.df)
+summary(copper.ns)
+```
+
+Fitting smoothing spline
+
+```{r}
+with(data=copper.df, #specifying effective df
+     smooth.spline(x=temperature,y,df=10,cv=F))
+with(data=copper.df, #using cv to choose effective df
+     smooth.spline(x=temperature,y=y,cv=T))
+copper.ss <- with(data=copper.df, #using GCV to choose effective df
+     smooth.spline(x=temperature,y=y,cv=F))
+```
+
+Comparing fits
+
+```{r}
+plot(x = copper.df$temperature, y = copper.df$y,
+col = "#7677ACAA", pch = 16,
+xlab = "Temperature (K)", ylab = "Expansion")
+lines(x = sort(copper.df$temperature), #filled in line is b-spline
+y = fitted(copper.bs)[order(copper.df$temperature)],
+col = "#4C7064", lwd = 3.5)
+lines(x = sort(copper.df$temperature), #dashed line is the natural spline
+y = fitted(copper.ns)[order(copper.df$temperature)],
+col = "#20245F", lwd = 3.5, lty="dashed")
+lines(x = sort(copper.df$temperature), #dotted line is the smoothing spline
+y = fitted(copper.ss)[order(copper.df$temperature)],
+col = "red", lwd = 3.5, lty="dotted")
+```
 
 ## Generalised additive models
 
+Splines only allow for one relationship **GAM** allow for multiple nonlinear regression relationships with the response.
+
+$$
+E(Y|X,Z) = X\beta + f(Z), \;\;\;\; E(Y|X,V=k,Z) = X\beta + h^{(k)}(Z), \;\;\;\;E(Y|X,Z_{1},Z_{2}) = X\beta + g(Z_{1},Z_{2})
+$$
+
+For $h^{k}(Z)=f(V,Z)$ k is the index representing the level of V, meaning the smooth function of Z depends on V
+
+For GLM we can simply apply link function to expected value and set equal to RHS of equations above e.g. $g(E\{Y|X\})$ for g(.) the logit or log function for binary or poisson count data respectively.
+
+To fit a GAM we minimise the **PRSS** (when normal response) by using the **back-fitting algorithm**
+
+$$
+PRSS(\alpha,f,\lambda)=\sum_{i}^{n}\bigg\{y_{i}-\hat{\alpha}-\sum_{j=1}^{p}\hat{f}_{j}(x_{ij})\bigg\}^{2} + \sum_{j=1}^{p}\lambda_{j}\int[\hat{f''_{j}}(t_{j})]^{2}dt_{j}
+$$
+
+1.  **Initalisation:** set $\hat{\alpha}=\bar{y}$, $f_{j}(x_{ij})=0$, $\delta >0$
+
+2.  **Cycle:** Fit each $\hat{f_{j}}$ using the cubic spline function $S\big(\{r_{ij}\}_{i=1}^{N}\big)$ with $r_{ij}=y_{i}-\hat{\alpha}-\sum_{k\ne j}\hat{f_{k}}(x_{ik})$ and center to stop **slippage,** repeat for all $\hat{f_{j}}$'s then update values
+
+3.  **Repeat** until convergence is reached
+
+For fitting **GAMs in GLM** framework maximise the **penalised log-likelihood** using both the **back-fitting algorithm** and **IRLS algorithm.** Main difference is now construct the **working response** $z_{i}$ and weights $w_{i}$ and then use the **weighted backfitting algorithm** to fit the regression model to the working response $z_{i}$ with weights $w_{i}$ to obtain new estimates. Also now define $\hat{\alpha}=g(\bar{y}),\hat{\eta_{i}}, \hat{\mu_{i}}=g^{-1}(\eta_{i})$ using the link function.
+
+#### Code:
+
+```{r}
+crystal.df = read.csv(file = "crystal.csv", header = T)
+gam.nl1 <- mgcv::gam(Y~H+s(M),family = "binomial",data=crystal.df) #1 linear, 1 non-linear term 
+summary(gam.nl1)
+
+gam.nlint <- mgcv::gam(Y~s(H,M),family = "binomial",data=crystal.df) #nonlinear interaction
+summary(gam.nlint) #use AIC to decide on best model
+```
+
 ## Kernel Smoothing methods
+
+I note we still have the issue that **neighboring points** in different intervals have **different data generation process** (as are modeled using different regression models) which makes interpretation challenging for modelling natural phenomenon.
+
+**K-nearest neighbour average,**
+
+$$
+E(Y_{i}|X)=\frac{1}{k}\sum_{i=1}^{N}y_{i}I\{x_{i}\in N_{k}(x_{i}) \}
+$$
+
+Has issue that is **discontinuous** due to jumps when neighbourhood changes. **Nadaraya-Watson kernel average** isused to stop issue of discontinuity by weighting points (diminishing weight further from target point) using kernel function.
+
+$$
+\hat{f}(x_{0})=\sum_{i=1}^{N}\frac{K_{\lambda}(x_{0},x_{i})}{\sum_{j=1}^{N}K_{\lambda}(x_{0},x_{j})}y_{i}
+$$
+
+Has issue of poor fit near boundaries due to **asymmetrical window** (neighbourhood), rectify this issue using **local regression** which fits a weighted (linear) function within window around target point**.** We fit this by minimising the **weighted residual sums of squares**
+
+$$
+\sum_{i=1}^{N}K_{\lambda}(x_{0},x_{i})\{y_{i}-\alpha(x_{0})-\beta(x_{0})x_{i}\}^{2}
+$$
+
+Giving the fitted value for target point $x_{0}$ of \$\\hat{f}(x\_{0})=\\hat{\\alpha}+\\hat{\\beta}(x\_{0})x\_{0}\$, thus we must repeat this process to fit each point. We can express in terms of matrices $\hat{f}(x_{0})=b(x_{0})^{T}(B^{T}W(x_{0})B)^{-1}B^{T}W(x_{0})y$ which gives us $\sum_{i=1}^{N}I_{i}(x_{0})y_{i}$ with $I_{i}(x_{0})$ the **equivalent kernel.**
+
+**Automatic kernel carpentry** is the phenomenon of local regression automatically adjusting the kernel to remove bias to the **first order** (use Taylor expansion to prove).
+
+Issue with fitting linear weighted model is it struggles with **curvature** (underfits and overfits) thus clear bias. Instead can fit a **local quadratic model** to fix this but will inflate the variance especially at the boundaries (no improvement in bias either at boundaries). The variance of the fitted value of the target point can be represented as $Var(\hat{f}(x_{0}))=\sigma^{2}||I(x_{0})||^{2}$. We an again define the **smoother matrix**, $\{\hat{S}_{\lambda}\}_{ij}=I_{i}(x_{j})$ with the effective degrees of freedom defined as before which we can use to select $\lambda$. Can also use **cross-validation** to select value of $\lambda$ (the **window width**).
+
+#### Code:
+
+```{r}
+microbe.df = read.csv(file = "microbe.csv", header = T); library(locpol)
+llr <- locpol::locpol(formula= rate~pH,
+                      deg=1,bw=0.075,kernel=EpaK,
+                      data=microbe.df)
+par(mfrow = c(2, 2))
+plot(llr) #use this to cmpare the bias and variance of models, look at the fitted values and size of the 95% CI
+```
