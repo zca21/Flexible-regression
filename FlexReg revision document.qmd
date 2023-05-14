@@ -53,7 +53,7 @@ Can compare covariance structures using **log-likelihood** (if nested e.g. unstr
 
 ## Random coefficient models
 
-Now have \$cov(\\boldsymbol{\\alpha})=\\phi \$ with phi storing variance of REs and their covariance, $G=\phi I$. Other big difference is that write model as,
+Now have $cov(\boldsymbol{\alpha})=\phi$ with phi storing variance of REs and their covariance, $G=\phi I$. Other big difference is that write model as,
 
 $$
 Y = Xb + Za + \varepsilon
@@ -61,12 +61,88 @@ $$
 
 With $Z=diag(X_{i})$ and $V=ZGZ^{T} + R$
 
+-   **Random intercept** models allow the **overall level** of the response to vary over clusters (after controlling for other covariates)
+
+-   **Random coefficient models** allow the **effects of covariates** to vary over clusters
+
 ## General linear mixed model
 
-Laplace approximations $\int_{\alpha}L(\alpha) d\alpha \approx L(\hat{\alpha})+\sqrt{2\pi/\hat{I(\hat{\alpha}})}$ with $-\frac{d^{2}}{d\alpha^{2}}=I(\alpha)$ are used to estimate FIGURE OUT POINT OF THIS
+The most **general form** with the error distribution $f(y;\eta,\phi)$ of the response $Y$ which might not normal can be represented as
+
+$$
+g(E\{Y|\alpha\})=\eta=X\beta + A\alpha
+$$
+
+Laplace approximations $\int_{\alpha}L(\alpha) d\alpha \approx L(\hat{\alpha})+\sqrt{2\pi/\hat{I(\hat{\alpha}})}$ with $-\frac{d^{2}}{d\alpha^{2}}=I(\alpha)$ are used to estimate likelihood used to fit model.
 
 The general likelihood of the GLMM is, (where product would also be applied inside integral for the j index)
 
 $$
-\prod_{i=1}^{n}\int_{\boldsymbol{\alpha}}f(\boldsymbol{y};\boldsymbol{\eta},\phi)\varphi(\boldsymbol{\alpha};\Sigma_{\alpha})d\boldsymbol{\alpha}
+L =\prod_{i=1}^{n}\int_{\boldsymbol{\alpha}}f(\boldsymbol{y};\boldsymbol{\eta},\phi)\varphi(\boldsymbol{\alpha};\Sigma_{\alpha})d\boldsymbol{\alpha}
 $$
+
+Normally would say what the kernel is and what the distribution of the REs are, for example for a poisson distribution,
+
+$$
+\prod_{i=1}^{n}\int_{\alpha_{i}}\prod_{j}Po(y_{ij}|exp(\beta_{0}+\alpha_{i}))\varphi(\alpha_{i};\Sigma_{\alpha})d\alpha_{i}
+$$
+
+With $\alpha_{i}\sim N(0,\sigma_{\alpha}^{2})$ and $Po(y_{ij}|\mu)=\frac{exp(-\mu )\mu^{y_{ij}}}{y_{ij}!}$ (this is for $log(E(Y_{ij}))=\eta_{i}=\beta_{0}+\alpha_{i}$), for more complicated structures (nesting) need to have multiple integrals and can use brackets to easily see what is what. (Note that the sigma is due to being a **multivariate normal distribution**).
+
+To predict the random effects we have to use **Bayes rules**
+
+$$
+\hat{\alpha_{i}} = \frac{\int_{\alpha_{i}}f(y_{i}|\alpha_{i})f(\alpha_{i})\alpha_{i}d\alpha_{i}}{\int_{\alpha_{i}}f(y_{i}|\alpha_{i})f(\alpha_{i})d\alpha_{i}}
+$$
+
+With values of $f(y_{i}|\alpha_{i})$ obtained from the ith row of linear predictor ($\eta_{i}$)
+
+## Non-parametric models
+
+Instead if we assume that $f(\alpha_{i})$ is an arbitrary distribution we get a discrete distribution ($f$ can be any GLM kernel)
+
+$$
+f(y_{ij})=\sum_{k=1}^{K}f(y_{ij}|\mu_{k},\sigma_{k}^{2})\pi_{k}
+$$
+
+-   Use maximising the log-likelihood to fit the parameters (apply log and sum over all observations)
+
+-   Can use **MAP** to classify observations into classes
+
+-   Can add covariates to the model by replacing mean with linear model (can be homogeneous or hetrogenous)
+
+For non-normal kernels need to use **link function** instead of just subbing in mean and SD.
+
+$$
+f(y_{ij})=\sum_{k=1}^{K}f(y_{ij}|exp(\beta_{0k}+\beta_{1k}x_{i1}))\pi_{k}
+$$
+
+# Non-linear Regression
+
+## Splines
+
+#### Information:
+
+Regression splines ensures a continuous function between polynomials in different regions (cubic is lowest order spline that has first and second derivatives of function are continuous) while **avoiding using very high degree global polynomial** (difficult to interpret). The **degrees of freedom** is M(K+1)-3K.
+
+**Truncated power series** with k knots,$\hat{Y}=f(X)=\sum_{k=0}^{K+M-1}\beta_{k}h_{k}(X)$
+
+**B-spline** is used to deal with issues of colinearity and extremely large/small values from even moderate order M. The **B-spline basis** $f(X)=\sum_{j=1}^{K+M}\beta_{j}B_{j,M}(X)$
+
+**Natural spline** is used to correct issues at the boundaries (unpredictable behavior, **Runge's phenomenon**) by adding constraints to truncated power series of second and third derivatives equal to zero for $X<c_{1}$ and $X>c_{K}$ which corresponds to $\beta_{2}=\beta_{3}=\sum_{k=3}^{K+3}\beta_{k}=\sum_{k=3}^{K+3}c_{k}\beta_{k}=0$. we can instead represent the natural spline as $\sum_{k=1}^{K}\beta_{k}N_{k}(X)$. We end up with a variance-bias tradeoff with the variance lower
+
+**Smoothing spline** is used to address issue of different cut-off points led to different approximations. It selects **maximum possible number of knots** but controls for overfitting by **regularisation** (restricts magnitude of coefficients). It is fitted by minimising the **penalized residual sum of squares,**
+
+$$
+f(;\lambda,f) = \sum_{i=1}^{n}\{y_{i}-f(x_{i})\}^{2}+\lambda\int [f^{''}(t)]^{2}dt
+$$
+
+With the **effective degrees of freedom** determined by the smoother matrix $S_{\lambda}=N(N^{T}N+\lambda \Omega_{N})^{-1}N^{T}$
+
+Want to choose $\lambda$ that minimises EPE (as EPE is a function of MSE so takes into account bias-variance trade-off). Use **k-fold cross-validation** to estimate the EPE, also can use **LOOCV** and **GCV.**
+
+#### Code:
+
+## Generalised additive models
+
+## Kernel Smoothing methods
