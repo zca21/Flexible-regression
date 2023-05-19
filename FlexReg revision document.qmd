@@ -23,13 +23,13 @@ With the critical value $\frac{1}{2}\chi_{(0)}^{2}+\frac{1}{2}\chi_{(1)}^{2}$ un
 The **covariance structure** of a LMM with G the $cov(\alpha)$ and A the design matrix of the random effects
 
 $$
-V = AGA^{T}+R
+Cov(Y)=Cov(X\beta+A\alpha+\varepsilon)=Cov(A\alpha+\varepsilon)=Cov(A\alpha)+Cov(\varepsilon)=ACov(\alpha)A^{T}+R \rightarrow V = AGA^{T}+R 
 $$
 
-Fitting the model using **profile log-likelihood,** first assume $V$ constant and fit $\beta$ by maximising log-likelihood then sub $\hat{\beta}$ back into likelihood and maximise likelihood (now only a function of $V$).
+Fitting the model using **profile log-likelihood,** first assume $V$ constant and fit $\beta$ by maximising log-likelihood then sub $\hat{\beta}$ back into likelihood and maximise likelihood (now only a function of \$V\$). Derived from the multivariate normal distribution $Y\sim MVN_{N}(X\beta,V)$.
 
 $$
- -2LogL = constant + log|V|+(Y-X\beta)^{-1}V^{-1}(Y-X\beta), \; \; \; \; \hat{\beta}=(X^{T}V^{-1}X)^{-1}X^{T}V^{-1}Y
+ -2LogL = constant + log|V|+(Y-X\beta)^{T}V^{-1}(Y-X\beta), \; \; \; \; \hat{\beta}=(X^{T}V^{-1}X)^{-1}X^{T}V^{-1}Y
 $$ This gives **biased** estimates of the covariance structure due to having to estimate the **mean structure** first. **REML** adds a correction term to adjust for this $+log(|X^{T}V^{-1}X|)$ giving unbiased estimates of the variance.
 
 ## Covariance Pattern models
@@ -66,13 +66,13 @@ With $Z=diag(X_{i})$ and $V=ZGZ^{T} + R$
 
 ## General linear mixed model
 
-The most **general form** with the error distribution $f(y;\eta,\phi)$ of the response $Y$ which might not normal can be represented as
+The most **general form** with the error distribution $f(y;\eta,\phi)$ of the response $Y$ which might not normal can be represented below (note is **conditional** on the random effects).
 
 $$
 g(E\{Y|\alpha\})=\eta=X\beta + A\alpha
 $$
 
-Laplace approximations $\int_{\alpha}L(\alpha) d\alpha \approx L(\hat{\alpha})+\sqrt{2\pi/\hat{I(\hat{\alpha}})}$ with $-\frac{d^{2}}{d\alpha^{2}}=I(\alpha)$ are used to estimate likelihood used to fit model.
+Laplace approximations $\int_{\alpha}L(\alpha) d\alpha \approx L(\hat{\alpha})+\sqrt{2\pi/\hat{I(\hat{\alpha}})}$ with $I(\alpha)=-\frac{d^{2}}{d\alpha^{2}}Log\{L(\alpha)\}$ are used to estimate likelihood used to fit model.
 
 The general likelihood of the GLMM is, (where product would also be applied inside integral for the j index)
 
@@ -98,7 +98,7 @@ With values of $f(y_{i}|\alpha_{i})$ obtained from the ith row of linear predict
 
 ## Non-parametric models
 
-Instead if we assume that $f(\alpha_{i})$ is an arbitrary distribution we get a discrete distribution ($f$ can be any GLM kernel)
+Instead if we assume that $f(\alpha_{i})$ is an arbitrary distribution we get a discrete distribution ($f$ can be any GLM kernel and $\sigma^{2}$ can be homogeneous or heterogeneous).
 
 $$
 f(y_{ij})=\sum_{k=1}^{K}f(y_{ij}|\mu_{k},\sigma_{k}^{2})\pi_{k}
@@ -110,7 +110,7 @@ $$
 
 -   Can add covariates to the model by replacing mean with linear model (can be homogeneous or hetrogenous)
 
--   Can calculate the **marginal mean** for each class as $\hat{\mu_{k}}=\frac{1}{n}\sum_{i=1}^{n}\hat{Y_{ik}}$
+-   Can calculate the **marginal mean** for each class as $\hat{\mu_{k}}=\frac{1}{n}\sum_{i=1}^{n}\hat{Y_{ik}}$ (useful to comparing classes when GLMs)
 
 For non-normal kernels need to use **link function** instead of just subbing in mean and SD.
 
@@ -128,25 +128,27 @@ $$
 
 ## Splines
 
-**Regression splines** ensures a continuous function between polynomials in different regions/intervals (cubic is lowest order spline that has continuous first and second derivatives of the function) while **avoiding using a very high degree global polynomial** (difficult to interpret and Runge's phenonemon). The **degrees of freedom** is M(K+1)-(M-1)K.
+**Regression splines** ensures a continuous function between polynomials in different regions/intervals (cubic is lowest order spline that has continuous first and second derivatives of the function, calc as M-2 is number of continuous derivaties) while **avoiding using a very high degree global polynomial** (difficult to interpret and Runge's phenonemon). The **degrees of freedom** is M(K+1)-(M-1)K.
 
 **Truncated power series of order M** with k knots,$\hat{Y}=f(X)=\sum_{k=0}^{K+M-1}\beta_{k}h_{k}(X)$
 
-**B-spline** is used to deal with issues of colinearity and extremely large/small values from even moderate order M. The **B-spline basis** $f(X)=\sum_{j=1}^{K+M}\beta_{j}B_{j,M}(X)$
+**B-spline** is used to deal with issues of colinearity and extremely large/small values from even moderate order M. The **B-spline basis** $f(X)=\sum_{j=1}^{K+M}\beta_{j}B_{j,M}(X)$ and can be created by augmenting the knot sequence (end up with **2M+K** knots) and using the **Cox-de Boor recursive formula.** Set $c_{0}<c_{1}$ and $c_{K+1}>c_{K}$ and the order 1 basis has 2M+K-1 elements. Note use **t-values** when looking at precision (as well as standard error) smaller values indicate coefficent estimates are **not as precise**.
 
-**Natural spline** is used to correct issues at the boundaries (unpredictable behavior, **Runge's phenomenon**) by adding constraints to truncated power series of second and third derivatives equal to zero for $X<c_{1}$ and $X>c_{K}$ which corresponds to $\beta_{2}=\beta_{3}=\sum_{k=1}^{K}\beta_{k+3}=\sum_{k=1}^{K}c_{k}\beta_{k+3}=0$. we can instead represent the natural spline as $\sum_{k=1}^{K}\beta_{k}N_{k}(X)$. We end up with a variance-bias tradeoff with the variance lower.
+**Natural spline** is used to correct issues at the boundaries (unpredictable behavior, **Runge's phenomenon**) by adding constraints to truncated power series of second and third derivatives equal to zero for $X<c_{1}$ and $X>c_{K}$ which corresponds to $\beta_{2}=\beta_{3}=\sum_{k=1}^{K}\beta_{k+3}=\sum_{k=1}^{K}c_{k}\beta_{k+3}=0$. we can instead represent the natural spline as $\sum_{k=1}^{K}\beta_{k}N_{k}(X)$. We end up with a variance-bias tradeoff with the variance lower but bias higher.
 
 We can also use **generalised linear regression** with splines by fitting spline to linear predictor $\eta$ thus, $g(E\{X\})=f(X)=\sum_{k=1}^{K}\beta_{k}N_{k}(X)$ (for natural spline in this case).
 
 **Smoothing spline** is used to address issue of different cut-off points led to different approximations. It selects **maximum possible number of knots** but controls for over-fitting by **regularisation** (restricts magnitude of coefficients). It is fitted by minimising the **penalized residual sum of squares,**
 
 $$
-f(;\lambda,f) = \sum_{i=1}^{n}\{y_{i}-f(x_{i})\}^{2}+\lambda\int [f^{''}(t)]^{2}dt
+PRSS(f,\lambda) = \sum_{i=1}^{n}\{y_{i}-f(x_{i})\}^{2}+\lambda\int [f^{''}(t)]^{2}dt
 $$
 
 With the **effective degrees of freedom** determined by the smoother matrix $S_{\lambda}=N(N^{T}N+\lambda \Omega_{N})^{-1}N^{T}$
 
-Want to choose $\lambda$ that minimises EPE (as EPE is a function of MSE so takes into account bias-variance trade-off). Use **k-fold cross-validation** to estimate the EPE, also can use **LOOCV** and **GCV.**
+Want to choose $\lambda$ (smoothing parameter which decides complexity of model) that minimises EPE (as EPE is a function of MSE so takes into account bias-variance trade-off). Use **k-fold cross-validation** to estimate the EPE, also can use **LOOCV** and **GCV.**
+
+Note **overfitting** means noise captured rather than trend
 
 #### Code
 
@@ -204,17 +206,17 @@ col = "red", lwd = 3.5, lty="dotted")
 
 ## Generalised additive models
 
-Splines only allow for one relationship **GAM** allow for multiple nonlinear regression relationships with the response.
+Splines only allow for one nonlinear relationship, **GAMs** allow for multiple nonlinear regression relationships with the response.
 
 $$
 E(Y|X,Z) = X\beta + f(Z), \;\;\;\; E(Y|X,V=k,Z) = X\beta + h^{(k)}(Z), \;\;\;\;E(Y|X,Z_{1},Z_{2}) = X\beta + g(Z_{1},Z_{2})
 $$
 
-For $h^{k}(Z)=f(V,Z)$ k is the index representing the level of V, meaning the smooth function of Z depends on V
+For $h^{k}(Z)=f(V,Z)$ k is the index representing the level of V, meaning the smooth function of Z depends on V. Also sometimes call the intercept $\alpha$.
 
-For GLM we can simply apply link function to expected value and set equal to RHS of equations above e.g. $g(E\{Y|X\})$ for g(.) the logit or log function for binary or poisson count data respectively.
+For GLM we can simply apply link function to expected value and set equal to RHS of equations above e.g. $g(E\{Y|X\})$ for $g(.)$ the logit or log function for binary or poisson count data respectively.
 
-To fit a GAM we minimise the **PRSS** (when normal response) by using the **back-fitting algorithm**
+To fit a GAM we minimise the **PRSS** (when normal response) by using the **back-fitting algorithm.** I note when minimising PRSS no unique solution unless we restrict $\sum_{i}f_{j}x_{ij}=0$ for all $j$.
 
 $$
 PRSS(\alpha,f,\lambda)=\sum_{i}^{n}\bigg\{y_{i}-\hat{\alpha}-\sum_{j=1}^{p}\hat{f}_{j}(x_{ij})\bigg\}^{2} + \sum_{j=1}^{p}\lambda_{j}\int[\hat{f''_{j}}(t_{j})]^{2}dt_{j}
@@ -222,9 +224,9 @@ $$
 
 1.  **Initalisation:** set $\hat{\alpha}=\bar{y}$, $f_{j}(x_{ij})=0$, $\delta >0$
 
-2.  **Cycle:** Fit each $\hat{f_{j}}$ using the cubic spline function $S\big(\{r_{ij}\}_{i=1}^{N}\big)$ with $r_{ij}=y_{i}-\hat{\alpha}-\sum_{k\ne j}\hat{f_{k}}(x_{ik})$ and center to stop **slippage,** repeat for all $\hat{f_{j}}$'s then update values
+2.  **Cycle:** Fit each $\hat{f_{j}}$ using the cubic spline function $S\big(\{r_{ij}\}_{i=1}^{N}\big)$ with $r_{ij}=y_{i}-\hat{\alpha}-\sum_{k\ne j}\hat{f_{k}}(x_{ik})$ and center to stop **slippage** (rounding error)**,** repeat for all $\hat{f_{j}}$'s then update values
 
-3.  **Repeat** until convergence is reached
+3.  **Repeat** until convergence is reached (when smaller than $\delta$ say it has stabilised)
 
 For fitting **GAMs in GLM** framework maximise the **penalised log-likelihood** using both the **back-fitting algorithm** and **IRLS algorithm.** Main difference is now construct the **working response** $z_{i}$ and weights $w_{i}$ and then use the **weighted backfitting algorithm** to fit the regression model to the working response $z_{i}$ with weights $w_{i}$ to obtain new estimates. Also now define $\hat{\alpha}=g(\bar{y}),\hat{\eta_{i}}, \hat{\mu_{i}}=g^{-1}(\eta_{i})$ using the link function.
 
@@ -243,19 +245,19 @@ summary(gam.nlint) #use AIC to decide on best model
 
 I note we still have the issue that **neighboring points** in different intervals have **different data generation process** (as are modeled using different regression models) which makes interpretation challenging for modelling natural phenomenon.
 
-**K-nearest neighbour average,**
+**K-nearest neighbour average,** the distance defined by **Euclidean distance** (unless 1 co-variate then can just use absolute difference) with effective df $\frac{N}{k}$
 
 $$
 E(Y_{i}|X)=\frac{1}{k}\sum_{i=1}^{N}y_{i}I\{x_{i}\in N_{k}(x_{i}) \}
 $$
 
-Has issue that is **discontinuous** due to jumps when neighbourhood changes. **Nadaraya-Watson kernel average** isused to stop issue of discontinuity by weighting points (diminishing weight further from target point) using kernel function.
+Has issue that is **discontinuous** due to jumps when neighbourhood changes (not property of true relationship). **Nadaraya-Watson kernel average** is used to stop issue of discontinuity by weighting points (diminishing weight further from target point) using kernel function. With $\lambda$ determining the bias-variance tradeoff.
 
 $$
 \hat{f}(x_{0})=\sum_{i=1}^{N}\frac{K_{\lambda}(x_{0},x_{i})}{\sum_{j=1}^{N}K_{\lambda}(x_{0},x_{j})}y_{i}
 $$
 
-Has issue of poor fit near boundaries due to **asymmetrical window** (neighbourhood), rectify this issue using **local regression** which fits a weighted (linear) function within window around target point**.** We fit this by minimising the **weighted residual sums of squares**
+Has issue of poor fit near boundaries due to **asymmetrical window** (neighbourhood) \[Note also an issue if there's uneven spacing of X values\], rectify this issue using **local regression** which fits a weighted (linear) function within window around target point**.** We fit this by minimising the **weighted residual sums of squares.** \[Note can consider fitting a straight line rather than constants locally\].
 
 $$
 \sum_{i=1}^{N}K_{\lambda}(x_{0},x_{i})\{y_{i}-\alpha(x_{0})-\beta(x_{0})x_{i}\}^{2}
@@ -263,9 +265,11 @@ $$
 
 Giving the fitted value for target point $x_{0}$ of \$\\hat{f}(x\_{0})=\\hat{\\alpha}+\\hat{\\beta}(x\_{0})x\_{0}\$, thus we must repeat this process to fit each point. We can express in terms of matrices $\hat{f}(x_{0})=b(x_{0})^{T}(B^{T}W(x_{0})B)^{-1}B^{T}W(x_{0})y$ which gives us $\sum_{i=1}^{N}I_{i}(x_{0})y_{i}$ with $I_{i}(x_{0})$ the **equivalent kernel.**
 
-**Automatic kernel carpentry** is the phenomenon of local regression automatically adjusting the kernel to remove bias to the **first order** (use Taylor expansion to prove).
+**Automatic kernel carpentry** is the phenomenon of local regression automatically adjusting the kernel to remove bias to the **first order** (use Taylor expansion to prove, remember that $E(y_{i})=f(x_{i})$ as error term is zero).
 
 Issue with fitting linear weighted model is it struggles with **curvature** (underfits and overfits) thus clear bias. Instead can fit a **local quadratic model** to fix this but will inflate the variance especially at the boundaries (no improvement in bias either at boundaries). The variance of the fitted value of the target point can be represented as $Var(\hat{f}(x_{0}))=\sigma^{2}||I(x_{0})||^{2}$. We an again define the **smoother matrix**, $\{\hat{S}_{\lambda}\}_{ij}=I_{i}(x_{j})$ with the effective degrees of freedom defined as before which we can use to select $\lambda$. Can also use **cross-validation** to select value of $\lambda$ (the **window width**).
+
+Window width needs to consider the scale of the covariates.
 
 #### Code:
 
@@ -277,3 +281,71 @@ llr <- locpol::locpol(formula= rate~pH,
 par(mfrow = c(2, 2))
 plot(llr) #use this to cmpare the bias and variance of models, look at the fitted values and size of the 95% CI
 ```
+
+# Notes from Past papers
+
+## Bath past papers
+
+-   mixed model has combination of fixed and random effects (effects that have their own **probability distribution**)
+
+-   linear model assumes IID realizations, mixed models can cope with **dependence structures** within observations (groups/time)
+
+-   Mixture models allow flexibility through **hierarchical modelling**
+
+-   May want to use RE when covariate scan be viewed as having a **probability distribution** assocaited with it
+
+-   For 2 independent random effects (intercept) the covariance structure of $\boldsymbol{\alpha}$ is a block diagonal of $\sigma_{\alpha}^{2}I_{n_{\alpha}}$ and $\sigma_{\beta}^{2}I_{n_{\beta}}$
+
+-   Sometime easiest to explain structure of $Z$ (REs design matrix) as made up of indicator columns, one for each level of RE, giving n ones in each row (n is number of REs in the model)
+
+-   **diagnostics of LMM:** residuals normally distributed (QQ plot) and independent of predicted values (residuals vs fitted plot), independence of residuals and explanatory variables, REs normally distributed and check for influential points (Cooks distance plot). Basically always want to look at **residual vs fitted plot** & **qq-plot**.
+
+## Southampton past papers
+
+-   metric window width vs k-nearest bias/variance differences
+
+-   **GAM R output:** family, link function, formula, parametric coef (linear ones), approx significance of smooth terms (includes p-values), GCV score
+
+-   Talking about relationships in GAMs: $h^{(x)}(Z_{1})$ indicates relationship between $Y$ and $Z_{1}$ is non-linear and that re;relationships depends on the level of \$X\$. $g(Z_{2},Z_{3})$ (defined by a joint function) indicates that the relationship between $Z_{2}$ and $Y$ is non-linear and depends on the value of \$Z\_{3}\$, similarly for $Z_{3}$.
+
+-   $Var(y) = \int_{y}(y-\mu)^{2}f(y)dy$
+
+-   For NS basis the K+2 basis's have knots 2 less than basis function number
+
+-   $MSE(\hat{f})=(E(\hat{f})-f)^{2}+Var(\hat{f})$, thus an increase in either bias or variance will lead to an increase in the MSE
+
+-   Include intercept in GAM models
+
+-   For calculating $Var(\bar{Y})$ use $Var(\sum_{i}\sum_{j}\sum_{k}Y_{ijk} = Var(\sum_{i}\sum_{j}\sum_{k}\alpha_{i}+\beta_{j(i)}+\varepsilon_{ijk})$ i.e. break into random parts and then can move due to summation and mult over other summations then take out of variance.
+
+-   Remember to mention if effects **significant** or not when interpreting model outputs
+
+-   B-Spline has **K+M** degrees of freedom, natural spline frees up 4 extra degrees of freedom (K+M-4)
+
+-   In GAM GLMs **remember to put conditional on covarites** for the link function applied to the response (i.e. RHS of the model expression)
+
+-   Learn expression of $z_{i}$ and $w_{i}$ for IRLS
+
+    $$
+    z_{i} = \hat{\eta_{i}}+\frac{y_{i}-\hat{p_{i}}}{\hat{p_{i}}(1-\hat{p_{i}})}\;or\;=\hat{\eta_{i}}+\frac{y_{i}-\hat{\mu_{i}}}{\hat{\mu_{i}}}, \;\;\; w_{i}=\hat{p_{i}}(1-\hat{p_{i}})\;or\;=\hat{\mu_{i}}
+    $$
+
+-   For **GLMM** DO NOT include $\varepsilon$ in model!
+
+-   Always **explain notation/symbols** in models
+
+-   Fitting local quadratic regression increases bias due to overfitting as effective df increases (fitting more parameters as including quadratic coefficient for each local regression)
+
+-   For non-parametric models can mention if **clear separation** of components/classes and if one is high/ highly successful
+
+-   For variance question the mixed product $2ab$ is zero as get equal terms which cancel (when integrate get $\mu_{k}-\mu_{k}$)
+
+-   May need to include **offset** in poisson count models (can be seen in STATA output as In(n))
+
+## Questions to go over
+
+-   GAM/kernel questions
+
+-   20/21, q2.b.ii
+
+-   21/22 Q2
