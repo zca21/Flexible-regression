@@ -43,7 +43,7 @@ $$
 Each person has there own matrix $X_{ij}$ for each of the $k$ observations that belong to them, thus each person has a covariance matrix \$R\_{ij}\$. We focus on $R_{00}$ to investigate the covariance structure.
 
 $$
-cov(\boldsymbol{\varepsilon_{ij}}) = R_{ij}, \;\;\;\; cov(\boldsymbol{\varepsilon})=R, \;\;\;\; V=ZRZ^{T} + R = R
+cov(\boldsymbol{\varepsilon_{ij}}) = R_{ij}, \;\;\;\; cov(\boldsymbol{\varepsilon})=R, \;\;\;\; V=ZGZ^{T} + R = R
 $$
 
 Covariance structures include: **independence** ($\sigma^{2}I$), **Toeplitz** ($\sigma^{2}$ on the diagonal and $\sigma_{1}$ on elements next to diagonal )**, Banded** (separate $\sigma_{i}^{2}$ on diagonal and different covariance for off diagonal)**, unstructured, Auto-regressive, Compound symmetric.**
@@ -58,7 +58,7 @@ $$
 Y = Xb + Za + \varepsilon
 $$
 
-With $Z=diag(X_{i})$ and $V=ZGZ^{T} + R$
+With $Z=diag(X_{i})$ and \$V=ZGZ\^{T} + R\$, to find structure it's easiest to rewrite model for a particular group (i.e. person) $Y_{i}=X_{i}(b_{i}+a_{i})+\varepsilon_{i}$
 
 -   **Random intercept** models allow the **overall level** of the response to vary over clusters (after controlling for other covariates)
 
@@ -66,13 +66,13 @@ With $Z=diag(X_{i})$ and $V=ZGZ^{T} + R$
 
 ## General linear mixed model
 
-The most **general form** with the error distribution $f(y;\eta,\phi)$ of the response $Y$ which might not normal can be represented below (note is **conditional** on the random effects).
+The most **general form** with the error distribution $f(y;\eta,\phi)$ of the response $Y$ which might not normal can be represented below (note is **conditional** on the random effects and don't include $\varepsilon$).
 
 $$
 g(E\{Y|\alpha\})=\eta=X\beta + A\alpha
 $$
 
-Laplace approximations $\int_{\alpha}L(\alpha) d\alpha \approx L(\hat{\alpha})+\sqrt{2\pi/\hat{I(\hat{\alpha}})}$ with $I(\alpha)=-\frac{d^{2}}{d\alpha^{2}}Log\{L(\alpha)\}$ are used to estimate likelihood used to fit model.
+Laplace approximations $\int_{\alpha}L(\alpha) d\alpha \approx L(\hat{\alpha})\sqrt{2\pi/\hat{I(\hat{\alpha}})}$ with $I(\alpha)=-\frac{d^{2}}{d\alpha^{2}}Log\{L(\alpha)\}$ are used to estimate likelihood used to fit model.
 
 The general likelihood of the GLMM is, (where product would also be applied inside integral for the j index)
 
@@ -83,7 +83,7 @@ $$
 Normally would say what the kernel is and what the distribution of the REs are, for example for a poisson distribution,
 
 $$
-\prod_{i=1}^{n}\int_{\alpha_{i}}\prod_{j}Po(y_{ij}|exp(\beta_{0}+\alpha_{i}))\varphi(\alpha_{i};\Sigma_{\alpha})d\alpha_{i}
+\prod_{i=1}^{n}\int_{\alpha_{i}}\prod_{j}Po(y_{ij}|exp(\beta_{0}+\alpha_{i}))\varphi(\alpha_{i};\sigma^{2}_{\alpha})d\alpha_{i}
 $$
 
 With $\alpha_{i}\sim N(0,\sigma_{\alpha}^{2})$ and $Po(y_{ij}|\mu)=\frac{exp(-\mu )\mu^{y_{ij}}}{y_{ij}!}$ (this is for $log(E(Y_{ij}))=\eta_{i}=\beta_{0}+\alpha_{i}$), for more complicated structures (nesting) need to have multiple integrals and can use brackets to easily see what is what. (Note that the sigma is due to being a **multivariate normal distribution**).
@@ -130,13 +130,13 @@ $$
 
 **Regression splines** ensures a continuous function between polynomials in different regions/intervals (cubic is lowest order spline that has continuous first and second derivatives of the function, calc as M-2 is number of continuous derivaties) while **avoiding using a very high degree global polynomial** (difficult to interpret and Runge's phenonemon). The **degrees of freedom** is M(K+1)-(M-1)K.
 
-**Truncated power series of order M** with k knots,$\hat{Y}=f(X)=\sum_{k=0}^{K+M-1}\beta_{k}h_{k}(X)$
+**Truncated power series of order M** with k knots, $\hat{Y}=f(X)=\sum_{k=0}^{K+M-1}\beta_{k}h_{k}(X)$
 
 **B-spline** is used to deal with issues of colinearity and extremely large/small values from even moderate order M. The **B-spline basis** $f(X)=\sum_{j=1}^{K+M}\beta_{j}B_{j,M}(X)$ and can be created by augmenting the knot sequence (end up with **2M+K** knots) and using the **Cox-de Boor recursive formula.** Set $c_{0}<c_{1}$ and $c_{K+1}>c_{K}$ and the order 1 basis has 2M+K-1 elements. Note use **t-values** when looking at precision (as well as standard error) smaller values indicate coefficent estimates are **not as precise**.
 
-**Natural spline** is used to correct issues at the boundaries (unpredictable behavior, **Runge's phenomenon**) by adding constraints to truncated power series of second and third derivatives equal to zero for $X<c_{1}$ and $X>c_{K}$ which corresponds to $\beta_{2}=\beta_{3}=\sum_{k=1}^{K}\beta_{k+3}=\sum_{k=1}^{K}c_{k}\beta_{k+3}=0$. we can instead represent the natural spline as $\sum_{k=1}^{K}\beta_{k}N_{k}(X)$. We end up with a variance-bias tradeoff with the variance lower but bias higher.
+**Natural spline** is used to correct issues at the boundaries (unpredictable behavior, **Runge's phenomenon**) by adding constraints to truncated power series of second and third derivatives equal to zero for $X<c_{1}$ and $X>c_{K}$ which corresponds to $\beta_{2}=\beta_{3}=\sum_{k=1}^{K}\beta_{k+3}=\sum_{k=1}^{K}c_{k}\beta_{k+3}=0$ (causing function to be linear beyond the boundary knots). we can instead represent the natural spline as $\sum_{k=1}^{K}\beta_{k}N_{k}(X)$. We end up with a variance-bias tradeoff with the variance lower but bias higher.
 
-We can also use **generalised linear regression** with splines by fitting spline to linear predictor $\eta$ thus, $g(E\{X\})=f(X)=\sum_{k=1}^{K}\beta_{k}N_{k}(X)$ (for natural spline in this case).
+We can also use **generalised linear regression** with splines by fitting spline to linear predictor $\eta$ thus, $g(E\{Y|X\})=f(X)=\sum_{k=1}^{K}\beta_{k}N_{k}(X)$ (for natural spline in this case).
 
 **Smoothing spline** is used to address issue of different cut-off points led to different approximations. It selects **maximum possible number of knots** but controls for over-fitting by **regularisation** (restricts magnitude of coefficients). It is fitted by minimising the **penalized residual sum of squares,**
 
@@ -209,10 +209,10 @@ col = "red", lwd = 3.5, lty="dotted")
 Splines only allow for one nonlinear relationship, **GAMs** allow for multiple nonlinear regression relationships with the response.
 
 $$
-E(Y|X,Z) = X\beta + f(Z), \;\;\;\; E(Y|X,V=k,Z) = X\beta + h^{(k)}(Z), \;\;\;\;E(Y|X,Z_{1},Z_{2}) = X\beta + g(Z_{1},Z_{2})
+E(Y|X,Z) = \alpha + X\beta + f(Z), \;\;\;\; E(Y|X,V=k,Z) = \alpha + X\beta + h^{(k)}(Z), \;\;\;\;E(Y|X,Z_{1},Z_{2}) = \alpha + X\beta + g(Z_{1},Z_{2})
 $$
 
-For $h^{k}(Z)=f(V,Z)$ k is the index representing the level of V, meaning the smooth function of Z depends on V. Also sometimes call the intercept $\alpha$.
+For $h^{k}(Z)=f(V,Z)$ k is the index representing the level of V, meaning the smooth function of Z depends on V.
 
 For GLM we can simply apply link function to expected value and set equal to RHS of equations above e.g. $g(E\{Y|X\})$ for $g(.)$ the logit or log function for binary or poisson count data respectively.
 
@@ -292,7 +292,7 @@ plot(llr) #use this to cmpare the bias and variance of models, look at the fitte
 
 -   Mixture models allow flexibility through **hierarchical modelling**
 
--   May want to use RE when covariate scan be viewed as having a **probability distribution** assocaited with it
+-   May want to use RE when covariates can be viewed as having a **probability distribution** assocaited with it
 
 -   For 2 independent random effects (intercept) the covariance structure of $\boldsymbol{\alpha}$ is a block diagonal of $\sigma_{\alpha}^{2}I_{n_{\alpha}}$ and $\sigma_{\beta}^{2}I_{n_{\beta}}$
 
@@ -300,13 +300,15 @@ plot(llr) #use this to cmpare the bias and variance of models, look at the fitte
 
 -   **diagnostics of LMM:** residuals normally distributed (QQ plot) and independent of predicted values (residuals vs fitted plot), independence of residuals and explanatory variables, REs normally distributed and check for influential points (Cooks distance plot). Basically always want to look at **residual vs fitted plot** & **qq-plot**.
 
+-   For **nested** effects, the are the number of effects are its levels mutliplied by the levels of the RE it is nested in
+
 ## Southampton past papers
 
 -   metric window width vs k-nearest bias/variance differences
 
 -   **GAM R output:** family, link function, formula, parametric coef (linear ones), approx significance of smooth terms (includes p-values), GCV score
 
--   Talking about relationships in GAMs: $h^{(x)}(Z_{1})$ indicates relationship between $Y$ and $Z_{1}$ is non-linear and that re;relationships depends on the level of \$X\$. $g(Z_{2},Z_{3})$ (defined by a joint function) indicates that the relationship between $Z_{2}$ and $Y$ is non-linear and depends on the value of \$Z\_{3}\$, similarly for $Z_{3}$.
+-   Talking about relationships in GAMs: $h^{(x)}(Z_{1})$ indicates relationship between $Y$ and $Z_{1}$ is non-linear and that relationship depends on the level of \$X\$. $g(Z_{2},Z_{3})$ (defined by a joint function) indicates that the relationship between $Z_{2}$ and $Y$ is non-linear and depends on the value of \$Z\_{3}\$, similarly for $Z_{3}$.
 
 -   $Var(y) = \int_{y}(y-\mu)^{2}f(y)dy$
 
@@ -349,3 +351,35 @@ plot(llr) #use this to cmpare the bias and variance of models, look at the fitte
 -   20/21, q2.b.ii
 
 -   21/22 Q2
+
+## Random extra stuff
+
+-   Can prove profile log-likelihood is bias using null model $y_{i}=\mu+\varepsilon_{i}$ and showing that estimate of $\sigma^{2}$ is biased (as estimate is $\frac{1}{n}\sum(y_{i}-\bar{y})^{2}$)
+
+-   The correlation between RI and RC is $\rho_{12}=\frac{\sigma_{12}}{\sqrt{\sigma_{1}^{2}\sigma_{2}^{2}}}$ **bivariate normal distribution**
+
+-   **Marginal mean** is calculated by finding mean of linear predictor with inverse of link function applied to it ($\mu_{k}=\frac{1}{n}\sum_{i} g^{-1}(\hat{\eta_{ik}})$)
+
+-   For **CV error** calculation remember to mention that sets are non-overlapping (also divide values of X into non-overlapping regions for splines (this includes order 1 step function))
+
+-   Can write the design matrix $B^{(M)}$ for a B-spline with rows for each $x_{i}$ value and columns for each of the K+M elements of the M order B-spline basis function
+
+-   When fitting GLM with spline just like GAM Y is **conditional** on X
+
+-   $Cov(\hat{f})=\sigma^{2}S_{\lambda}S_{\lambda}^{T}$
+
+-   The Laplace formula is used to find prob distribution (marginal density) of $f(y_{ij})$ as in MVN can just integrate but with other GLM kernels no closed form exists so need to approximate
+
+-   In NW we fit a constant function within the window (thus asmaller window means we are approximating the curve in a smaller region of X - thus less crude than a larger region)
+
+-   When explaining bias in NW can say due to the asymmetric kernel (caused by truncation on boundary side) means less equivalent kernel weights on boundary side and thus fitted value is biased by obs on non-boundary side \[LLR has greater equivalent kernel weighting on boundary side to combat this\]
+
+-   When fitting a linear spline after 1st intercept (value if line carried on to $X=0$) don't need to estimate any other intercepts as use value at cutoff only estimate $\beta_{i}$ which is **modification** of the slope in previous region.
+
+-   For **natural spline** $c_{1}$ and $c_{K}$ are the boundary knots
+
+-   In **GAM** require $\sum_{i}f_{j}(x_{ij})=0$ for all j (sum of each smooth function over all values is zero)
+
+-   For **window width** remember variance depends on number of points in window and bias how close points are to the target point
+
+-   To construct **Truncated power series** 1st just put to by power of k, then for next set take away $c_{i}$ from each value and set those smaller than zero to zero and then raise to power of M-1 repeat ...
